@@ -1,61 +1,110 @@
-# template-for-proposals
+# Proposal of null check object destructuring
 
-A repository template for ECMAScript proposals.
+Proposal to add the null check in objct destructuring syntax
 
-## Before creating a proposal
+## Status
 
-Please ensure the following:
-  1. You have read the [process document](https://tc39.github.io/process-document/)
-  1. You have reviewed the [existing proposals](https://github.com/tc39/proposals/)
-  1. You are aware that your proposal requires being a member of TC39, or locating a TC39 delegate to "champion" your proposal
+State: -1
 
-## Create your proposal repo
+Author: @thejoin95 ([@thejoin95](https://twitter.com/thejoin95))
 
-Follow these steps:
-  1. Click the green ["use this template"](https://github.com/tc39/template-for-proposals/generate) button in the repo header. (Note: Do not fork this repo in GitHub's web interface, as that will later prevent transfer into the TC39 organization)
-  1. Update the biblio to the latest version: `npm install --save-dev --save-exact @tc39/ecma262-biblio@latest`.
-  1. Go to your repo settings “Options” page, under “GitHub Pages”, and set the source to the **main branch** under the root (and click Save, if it does not autosave this setting)
-      1. check "Enforce HTTPS"
-      1. On "Options", under "Features", Ensure "Issues" is checked, and disable "Wiki", and "Projects" (unless you intend to use Projects)
-      1. Under "Merge button", check "automatically delete head branches"
-<!--
-  1. Avoid merge conflicts with build process output files by running:
-      ```sh
-      git config --local --add merge.output.driver true
-      git config --local --add merge.output.driver true
-      ```
-  1. Add a post-rewrite git hook to auto-rebuild the output on every commit:
-      ```sh
-      cp hooks/post-rewrite .git/hooks/post-rewrite
-      chmod +x .git/hooks/post-rewrite
-      ```
--->
-  3. ["How to write a good explainer"][explainer] explains how to make a good first impression.
+Champion: need one
 
-      > Each TC39 proposal should have a `README.md` file which explains the purpose
-      > of the proposal and its shape at a high level.
-      >
-      > ...
-      >
-      > The rest of this page can be used as a template ...
+## Motivation
 
-      Your explainer can point readers to the `index.html` generated from `spec.emu`
-      via markdown like
+Object destructuring is well use by the javascript developers. The default value in case of an undefined prop is useful and I think it could be even better if we are going to implement it as well with the null check, especially for a nested object in order to avoid null check errors.
 
-      ```markdown
-      You can browse the [ecmarkup output](https://ACCOUNT.github.io/PROJECT/)
-      or browse the [source](https://github.com/ACCOUNT/PROJECT/blob/HEAD/spec.emu).
-      ```
+## Use cases & description
 
-      where *ACCOUNT* and *PROJECT* are the first two path elements in your project's Github URL.
-      For example, for github.com/**tc39**/**template-for-proposals**, *ACCOUNT* is "tc39"
-      and *PROJECT* is "template-for-proposals".
+Imagine to have an object with n depth level, e.g. a react state/context with differents properties containing n-depth objects.
+In some scenario you want to destructure few properties at the first level and in other case also some more specific in-depth props.
 
+```
+const state = {
+  navbar: {
+    profileMenu: {
+      username: 'jhondoe',
+      ...
+    }
+  },
+  footer: {
+    brand: {
+      title: 'brand one',
+      ...
+    }
+  },
+  ...
+}
 
-## Maintain your proposal repo
+const {
+  navbar: {
+    profileMenu: {
+      username: ProfileMenuUsername
+    }
+  }
+} = state;
 
-  1. Make your changes to `spec.emu` (ecmarkup uses HTML syntax, but is not HTML, so I strongly suggest not naming it ".html")
-  1. Any commit that makes meaningful changes to the spec, should run `npm run build` and commit the resulting output.
-  1. Whenever you update `ecmarkup`, run `npm run build` and commit any changes that come from that dependency.
+```
 
-  [explainer]: https://github.com/tc39/how-we-work/blob/HEAD/explainer.md
+Let's say that, the properties are going to be valorised but some of them would have a `null` value:
+
+```
+{
+  navbar: {
+    profileMenu: null,
+  },
+  footer: {
+    brand: {
+      title: 'brand one',
+      ...
+    }
+  },
+  ...
+}
+
+const {
+  navbar: {
+    profileMenu: {
+      username: ProfileMenuUsername
+    }
+  }
+} = state; // this will break because there is no valid username prop in null
+
+```
+
+When a nested property is undefined, we could assign the default value, defined in the object destructuring syntax:
+
+```
+const {
+  navbar: {
+    profileMenu: {
+      username: ProfileMenuUsername
+    } = { username: null }
+  } = { profileMenu: { username: null } }
+} = state;
+
+```
+
+It would be great to have a syntax to indicate whenever a property could be nullable by adding a short circuit instead of throwing an error by reusing the `.?`, such like:
+
+```
+const {
+  navbar: {
+    profileMenu?: {
+      username: ProfileMenuUsername
+    } = { username: null }
+  } = { profileMenu: { username: null } }
+} = state;
+
+```
+
+## Comparison
+
+These npm modules do something like the proposal:
+- [lodash.get](https://lodash.com/docs/#get)
+
+Even though is a different approach, would say old style, and I believe it should implemented directly on the destructure syntax.
+
+## Q&A
+
+In progress
